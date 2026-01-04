@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Resume - AI-Powered Resume Tailoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        input[type="file"] {
+            padding: 10px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .score-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .score-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .score-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .suggestions-list {
+            margin-top: 20px;
+        }
+        
+        .suggestion-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .suggestion-type {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .suggestion-content {
+            margin-bottom: 15px;
+        }
+        
+        .suggestion-text {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .suggestion-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-accept {
+            background: #28a745;
+        }
+        
+        .btn-reject {
+            background: #dc3545;
+        }
+        
+        .btn-edit {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Perfect Resume</h1>
+        <p class="subtitle">AI-Powered Resume Tailoring Tool</p>
+        
+        <!-- Step 1: Upload Resume -->
+        <div class="section">
+            <h2>Step 1: Upload Your Resume</h2>
+            <div class="input-group">
+                <label for="resumeFile">Resume File (PDF or DOCX)</label>
+                <input type="file" id="resumeFile" accept=".pdf,.docx,.doc">
+            </div>
+            <button onclick="uploadResume()">Upload Resume</button>
+            <div id="resumeStatus" class="status"></div>
+            <div id="resumeInfo" class="hidden" style="margin-top: 15px; padding: 15px; background: #e7f3ff; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5em;">📄</span>
+                    <div>
+                        <div style="font-weight: 600; color: #333;" id="resumeName">Resume loaded</div>
+                        <div style="font-size: 0.9em; color: #666;" id="resumeSummary"></div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button onclick="toggleResumePreview()" style="background: #667eea; padding: 8px 15px; font-size: 0.85em;">👁 Preview Resume</button>
+                    <button onclick="deleteResume()" style="background: #dc3545; padding: 8px 15px; font-size: 0.85em;">🗑 Delete & Upload New</button>
+                </div>
+                
+                <!-- Resume Preview Section -->
+                <div id="resumePreview" class="hidden" style="margin-top: 15px; padding: 20px; background: white; border-radius: 8px; border: 1px solid #ddd; max-height: 500px; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #333;">📋 Resume Preview</h3>
+                        <button onclick="toggleResumePreview()" style="background: #999; padding: 5px 10px; font-size: 0.8em;">Close</button>
+                    </div>
+                    
+                    <!-- Personal Info -->
+                    <div id="previewPersonalInfo" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #667eea;"></div>
+                    
+                    <!-- Summary -->
+                    <div id="previewSummarySection" style="margin-bottom: 20px;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">Professional Summary</h4>
+                        <div id="previewSummary" style="color: #555; line-height: 1.6;"></div>
+                    </div>
+                    
+                    <!-- Experience -->
+                    <div id="previewExperienceSection" style="margin-bottom: 20px;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">Work Experience</h4>
+                        <div id="previewExperience"></div>
+                    </div>
+                    
+                    <!-- Education -->
+                    <div id="previewEducationSection" style="margin-bottom: 20px;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">Education</h4>
+                        <div id="previewEducation"></div>
+                    </div>
+                    
+                    <!-- Skills -->
+                    <div id="previewSkillsSection">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">Skills</h4>
+                        <div id="previewSkills" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 2: Parse Job Description -->
+        <div class="section">
+            <h2>Step 2: Paste Job Description</h2>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                Simply paste the full job description text below. The AI will use the complete text directly to compare with your resume and generate accurate suggestions. No parsing needed - just paste and go!
+            </p>
+            <div class="input-group">
+                <label for="jdInput">Job Description Text</label>
+                <textarea id="jdInput" placeholder="Paste the complete job description here...&#10;&#10;Example:&#10;Product Manager: Webinars, Productivity &amp; AI&#10;&#10;We are looking for...&#10;&#10;Responsibilities:&#10;- Lead product development...&#10;- Collaborate with engineering teams...&#10;&#10;Requirements:&#10;- 5+ years product management experience&#10;- Experience with AI/ML products..." rows="8"></textarea>
+            </div>
+            <button onclick="parseJD()">Analyze Job Description</button>
+            <div id="jdStatus" class="status"></div>
+            <div id="jdInfo" class="hidden" style="margin-top: 15px; padding: 20px; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 10px; border: 1px solid #ddd6fe;">
+                <div id="jdId" style="display: none;"></div>
+                
+                <!-- 1. Role Overview -->
+                <div style="margin-bottom: 18px;">
+                    <div style="font-weight: 700; color: #333; font-size: 1.3em; margin-bottom: 4px;" id="jdRole">Job Title</div>
+                    <div style="font-size: 0.95em; color: #555; margin-bottom: 12px;" id="jdCompany"></div>
+                    
+                    <!-- Role Summary -->
+                    <div id="jdRoleSummary" style="display: none; padding: 14px 16px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); border-left: 3px solid #667eea; border-radius: 0 8px 8px 0; font-size: 0.92em; line-height: 1.6; color: #444; font-style: italic;"></div>
+                </div>
+                
+                <!-- 2. Stats Summary -->
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px; font-size: 0.8em;">
+                    <span style="background: white; color: #667eea; padding: 5px 12px; border-radius: 15px; border: 1px solid #667eea;">
+                        🚨 <strong id="jdMustHaveCount">0</strong> Must-Have
+                    </span>
+                    <span style="background: white; color: #667eea; padding: 5px 12px; border-radius: 15px; border: 1px solid #667eea;">
+                        ⭐ <strong id="jdNiceToHaveCount">0</strong> Nice-to-Have
+                    </span>
+                    <span style="background: white; color: #667eea; padding: 5px 12px; border-radius: 15px; border: 1px solid #667eea;">
+                        🔧 <strong id="jdTechnicalSkillsCount">0</strong> Technical
+                    </span>
+                    <span style="background: white; color: #667eea; padding: 5px 12px; border-radius: 15px; border: 1px solid #667eea;">
+                        💬 <strong id="jdSoftSkillsCount">0</strong> Soft Skills
+                    </span>
+                    <span style="background: white; color: #667eea; padding: 5px 12px; border-radius: 15px; border: 1px solid #667eea;">
+                        🔑 <strong id="jdKeywordsCount">0</strong> Keywords
+                    </span>
+                </div>
+                
+                <!-- 3. Full Analysis Button -->
+                <button onclick="toggleJDPreview()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 10px 20px; font-size: 0.9em;">👁 View Full Analysis</button>
+                
+                <!-- Full Analysis Panel -->
+                <div id="jdPreview" class="hidden" style="margin-top: 20px; background: white; border-radius: 10px; border: 1px solid #ddd; max-height: 600px; overflow-y: auto;">
+                    
+                    <!-- Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px 10px 0 0;">
+                        <h3 style="margin: 0; font-size: 1.1em;">Full Analysis</h3>
+                        <button onclick="toggleJDPreview()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 5px 12px; font-size: 0.8em; border-radius: 5px;">Close</button>
+                </div>
+                    
+                    <div style="padding: 20px;">
+                        
+                        <!-- Section 1: Requirements -->
+                        <div style="margin-bottom: 25px;">
+                            <div style="font-weight: 600; color: #667eea; font-size: 0.95em; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #667eea;">
+                                ✅ Requirements
+                            </div>
+                            
+                            <!-- Must-Have -->
+                            <div style="margin-bottom: 15px; padding: 12px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
+                                <div style="font-weight: 600; color: #dc2626; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: 0.9em;">
+                                    🚨 Must-Have <span id="jdMustHaveBadge" style="background: #dc2626; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75em;"></span>
+                    </div>
+                                <ul id="jdMustHaveList" style="margin: 0 0 0 20px; color: #555; line-height: 1.7; font-size: 0.85em;"></ul>
+                            </div>
+                            
+                            <!-- Nice-to-Have -->
+                            <div id="jdNiceToHaveSection" style="padding: 12px; background: #fefce8; border-radius: 8px; border-left: 4px solid #eab308;">
+                                <div style="font-weight: 600; color: #ca8a04; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: 0.9em;">
+                                    ⭐ Nice-to-Have <span id="jdNiceToHaveBadge" style="background: #ca8a04; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75em;"></span>
+                                </div>
+                                <ul id="jdNiceToHaveList" style="margin: 0 0 0 20px; color: #555; line-height: 1.7; font-size: 0.85em;"></ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Section 2: Responsibilities -->
+                        <div id="jdResponsibilitiesSection" style="margin-bottom: 25px;">
+                            <div style="font-weight: 600; color: #667eea; font-size: 0.95em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #667eea; display: flex; align-items: center; gap: 8px;">
+                                📝 Responsibilities <span id="jdRespCountBadge" style="background: #667eea; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75em;"></span>
+                            </div>
+                            <ul id="jdResponsibilities" style="margin: 0 0 0 20px; color: #555; line-height: 1.7; font-size: 0.9em;"></ul>
+                        </div>
+                        
+                        <!-- Section 3: Skills & Keywords (Unified Design) -->
+                        <div style="margin-bottom: 25px;">
+                            <div style="font-weight: 600; color: #667eea; font-size: 0.95em; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #667eea;">
+                                🛠 Skills & Keywords
+                            </div>
+                            
+                            <!-- Technical Skills -->
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: 500; color: #555; margin-bottom: 10px; font-size: 0.85em;">🔧 Technical Skills</div>
+                                <div id="jdTechnicalSkillsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                            </div>
+                            
+                            <!-- Soft Skills -->
+                            <div id="jdSoftSkillsSection" style="margin-bottom: 15px;">
+                                <div style="font-weight: 500; color: #555; margin-bottom: 10px; font-size: 0.85em;">💬 Soft Skills</div>
+                                <div id="jdSoftSkillsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                            </div>
+                            
+                            <!-- Keywords -->
+                            <div>
+                                <div style="font-weight: 500; color: #555; margin-bottom: 10px; font-size: 0.85em;">🔑 Keywords for ATS</div>
+                                <div id="jdKeywordsList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 3: Get Suggestions -->
+        <div class="section">
+            <h2>Step 3: Get AI Suggestions</h2>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+                The AI will analyze your resume against the job description and provide prioritized, actionable suggestions.
+            </p>
+            <button onclick="getSuggestions()">🎯 Generate Suggestions</button>
+            <div id="suggestionsStatus" class="status"></div>
+            
+            <!-- AI Summary -->
+            <div id="suggestionsSummary" class="hidden" style="margin-top: 20px; padding: 18px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 10px; border-left: 4px solid #667eea;">
+                <div style="font-weight: 600; color: #667eea; margin-bottom: 10px; font-size: 1em;">📊 AI Analysis Summary</div>
+                <div id="summaryContent" style="color: #444; line-height: 1.7; font-size: 0.95em;"></div>
+            </div>
+            
+            <!-- Preview Mode Toggle -->
+            <div id="previewControls" class="hidden" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+                <button onclick="togglePreviewMode()" id="previewToggle" style="background: #f8f9fa; color: #333; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.85em;">
+                    👁 Preview Resume with Changes
+                </button>
+                <span id="acceptedCount" style="color: #28a745; font-size: 0.85em; font-weight: 500;">0 changes accepted</span>
+            </div>
+            
+            <!-- Preview Panel - Full Resume Format -->
+            <div id="previewPanel" class="hidden" style="margin-top: 15px; padding: 25px; background: white; border-radius: 10px; border: 1px solid #ddd; max-height: 600px; overflow-y: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #667eea;">
+                    <div>
+                        <h4 style="margin: 0; color: #333;">📄 Resume Preview</h4>
+                        <span style="font-size: 0.8em; color: #28a745;">✨ Changes are highlighted in green</span>
+                    </div>
+                    <button onclick="togglePreviewMode()" style="background: #dc3545; padding: 5px 12px; font-size: 0.8em;">✕ Close</button>
+                </div>
+                
+                <!-- Personal Info -->
+                <div id="previewPanelPersonalInfo" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; text-align: center;"></div>
+                
+                <!-- Summary -->
+                <div id="previewPanelSummarySection" style="margin-bottom: 20px;">
+                    <h4 style="color: #667eea; margin-bottom: 10px; font-size: 1em; text-transform: uppercase; letter-spacing: 1px;">📝 Summary</h4>
+                    <div id="previewPanelSummary" style="color: #555; line-height: 1.6;"></div>
+                </div>
+                
+                <!-- Experience -->
+                <div id="previewPanelExperienceSection" style="margin-bottom: 20px;">
+                    <h4 style="color: #667eea; margin-bottom: 10px; font-size: 1em; text-transform: uppercase; letter-spacing: 1px;">💼 Experience</h4>
+                    <div id="previewPanelExperience"></div>
+                </div>
+                
+                <!-- Education -->
+                <div id="previewPanelEducationSection" style="margin-bottom: 20px;">
+                    <h4 style="color: #667eea; margin-bottom: 10px; font-size: 1em; text-transform: uppercase; letter-spacing: 1px;">🎓 Education</h4>
+                    <div id="previewPanelEducation"></div>
+                </div>
+                
+                <!-- Skills -->
+                <div id="previewPanelSkillsSection">
+                    <h4 style="color: #667eea; margin-bottom: 10px; font-size: 1em; text-transform: uppercase; letter-spacing: 1px;">🛠 Skills</h4>
+                    <div id="previewPanelSkills" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+            </div>
+            
+            <!-- Grouped Suggestions -->
+            <div id="suggestionsList" class="suggestions-list"></div>
+            
+            <!-- Copy All Accepted Changes -->
+            <div id="copyAllSection" class="hidden" style="margin-top: 20px; background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); padding: 20px; border-radius: 10px; border: 1px solid #28a745;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <div style="font-weight: 600; color: #155724; margin-bottom: 5px;">✨ Copy & Paste into Your Original Document</div>
+                        <p style="color: #155724; font-size: 0.85em; margin: 0;">
+                            This preserves your original formatting.
+                        </p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span id="exportChangesCount" style="color: #155724; font-size: 0.9em; font-weight: 500;">0 changes</span>
+                        <button onclick="copyAllAccepted()" style="background: #28a745; padding: 12px 25px;">
+                            📋 Copy All Accepted Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 4: Export -->
+        <div class="section">
+            <h2>Step 4: Export Tailored Resume</h2>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+                Generate a new document with all accepted changes applied.
+            </p>
+            
+            <!-- Score Comparison Card -->
+            <div id="scoreComparisonCard" class="hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; margin-bottom: 15px; color: white;">
+                <div style="font-weight: 600; font-size: 1.1em; margin-bottom: 15px;">📊 Resume Match Score</div>
+                <div style="display: flex; gap: 30px; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">Original Score</div>
+                        <div style="font-size: 2em; font-weight: 700;" id="originalScoreDisplay">--</div>
+                        <div style="background: rgba(255,255,255,0.3); height: 8px; border-radius: 4px; margin-top: 5px;">
+                            <div id="originalScoreBar" style="background: rgba(255,255,255,0.8); height: 100%; border-radius: 4px; width: 0%; transition: width 0.5s;"></div>
+                        </div>
+                    </div>
+                    <div style="font-size: 2em; color: rgba(255,255,255,0.8);">→</div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">After Changes</div>
+                        <div style="font-size: 2em; font-weight: 700;"><span id="newScoreDisplay">--</span> <span id="scoreImprovement" style="font-size: 0.5em; background: #28a745; padding: 3px 8px; border-radius: 10px; vertical-align: middle;"></span></div>
+                        <div style="background: rgba(255,255,255,0.3); height: 8px; border-radius: 4px; margin-top: 5px;">
+                            <div id="newScoreBar" style="background: #28a745; height: 100%; border-radius: 4px; width: 0%; transition: width 0.5s;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; font-size: 0.85em; opacity: 0.9;">
+                    <span id="acceptedCountDisplay">0</span> suggestions accepted
+                </div>
+            </div>
+            
+            <!-- Export Files -->
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button onclick="exportResume('pdf')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px 25px; font-size: 1em;">
+                    📄 Export PDF
+                </button>
+                <button onclick="exportResume('docx')" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); padding: 12px 25px; font-size: 1em;">
+                    📝 Export DOCX
+                </button>
+            </div>
+            <p style="color: #888; font-size: 0.8em; margin-top: 10px;">
+                ⚠️ Note: Exported files use a standard format. For best results, use "Copy All" above and paste into your original document.
+            </p>
+            
+            <div id="exportStatus" class="status"></div>
+            
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                <button onclick="startNewSession()" style="background: #6c757d; padding: 8px 16px; font-size: 0.85em;">
+                    🔄 Start New Session (Clear Saved Data)
+                </button>
+                <span style="color: #888; font-size: 0.8em; margin-left: 10px;">Your JD and suggestions are auto-saved</span>
+            </div>
+        </div>
+        
+    </div>
+    
+    <script>
+        // Use relative URL to avoid CORS issues (same origin)
+        const API_BASE = '/api';
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Group suggestions by category
+        function groupSuggestionsByCategory(suggestions) {
+            const groups = {
+                summary: { label: '📝 Summary', icon: '📝', suggestions: [] },
+                experience: { label: '💼 Experience', icon: '💼', suggestions: [] },
+                skills: { label: '🛠 Skills', icon: '🛠', suggestions: [] },
+                keywords: { label: '🔑 Keywords', icon: '🔑', suggestions: [] }
+            };
+            
+            // Track seen original texts to prevent duplicates
+            const seenOriginals = new Set();
+            
+            suggestions.forEach((sug, index) => {
+                // Deduplicate by original text (first 100 chars)
+                const originalKey = (sug.original_text || '').toLowerCase().trim().substring(0, 100);
+                if (seenOriginals.has(originalKey)) {
+                    console.log('Skipping duplicate suggestion:', sug.original_text?.substring(0, 50));
+                    return;
+                }
+                seenOriginals.add(originalKey);
+                
+                const category = sug.category || 'experience';
+                sug._index = index; // Store original index for actions
+                if (groups[category]) {
+                    groups[category].suggestions.push(sug);
+                } else {
+                    groups.experience.suggestions.push(sug);
+                }
+            });
+            
+            return groups;
+        }
+        
+        // Get priority badge HTML
+        function getPriorityBadge(priority) {
+            const styles = {
+                high: 'background: #dc3545; color: white;',
+                medium: 'background: #ffc107; color: #333;',
+                low: 'background: #6c757d; color: white;'
+            };
+            const labels = { high: '🔥 HIGH', medium: '⚡ MEDIUM', low: '💡 LOW' };
+            return `<span style="${styles[priority] || styles.medium} padding: 3px 8px; border-radius: 10px; font-size: 0.7em; font-weight: 600;">${labels[priority] || labels.medium}</span>`;
+        }
+        
+        // Render grouped suggestions
+        function renderGroupedSuggestions(groups) {
+            let html = '';
+            
+            for (const [category, group] of Object.entries(groups)) {
+                if (group.suggestions.length === 0) continue;
+                
+                html += `
+                    <div class="suggestion-group" style="margin-top: 25px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                            <span style="font-size: 1.3em;">${group.icon}</span>
+                            <h3 style="margin: 0; color: #333; font-size: 1.1em;">${group.label}</h3>
+                            <span style="background: #667eea; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.8em;">${group.suggestions.length}</span>
+                        </div>
+                        ${group.suggestions.map(sug => renderSuggestionCard(sug)).join('')}
+                    </div>
+                `;
+            }
+            
+            return html;
+        }
+        
+        // Render individual suggestion card
+        function renderSuggestionCard(suggestion) {
+            const index = suggestion._index;
+            return `
+                <div class="suggestion-card" data-id="${suggestion.id}" data-index="${index}" style="margin-bottom: 20px; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
+                    <div class="suggestion-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            ${getPriorityBadge(suggestion.priority)}
+                            <span style="color: #28a745; font-weight: 600; font-size: 0.9em;">+${suggestion.expected_score_delta.toFixed(1)} pts</span>
+                        </div>
+                        <span class="suggestion-type" style="background: ${suggestion.section_type === 'bullet' ? '#667eea' : suggestion.section_type === 'skill' ? '#28a745' : '#17a2b8'}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 500; text-transform: uppercase;">
+                            ${suggestion.section_type}
+                        </span>
+                    </div>
+                    <div class="suggestion-content" style="padding: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <div style="color: #dc3545; font-weight: 600; margin-bottom: 5px; font-size: 0.85em;">❌ CURRENT</div>
+                                <div style="background: #fff5f5; padding: 12px; border-left: 3px solid #dc3545; border-radius: 5px; color: #333; font-size: 0.9em; line-height: 1.5; max-height: 150px; overflow-y: auto;">
+                                    ${escapeHtml(suggestion.original_text)}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <div style="color: #28a745; font-weight: 600; font-size: 0.85em;">✅ SUGGESTED</div>
+                                    <button onclick="copySuggestion('${suggestion.id}')" style="background: #667eea; color: white; border: none; padding: 5px 12px; font-size: 0.8em; border-radius: 5px; cursor: pointer; font-weight: 500;" title="Copy to clipboard">📋 Copy</button>
+                                </div>
+                                <div id="suggested-${suggestion.id}" style="background: #f0fff4; padding: 12px; border-left: 3px solid #28a745; border-radius: 5px; color: #333; font-size: 0.9em; line-height: 1.5; max-height: 150px; overflow-y: auto;">
+                                    ${escapeHtml(suggestion.suggested_text)}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="font-weight: 600; color: #667eea; margin-bottom: 5px; font-size: 0.85em;">💡 Why this helps</div>
+                            <div id="reason-${suggestion.id}" style="color: #444; line-height: 1.5; font-size: 0.9em;">${escapeHtml(suggestion.reason)}</div>
+                            ${suggestion.jd_mapping ? `
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(102, 126, 234, 0.2);">
+                                    <span style="color: #667eea; font-weight: 500; font-size: 0.8em;">🎯 JD Match:</span>
+                                    <span style="color: #555; font-size: 0.85em;">${escapeHtml(suggestion.jd_mapping)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Feedback Input -->
+                        <div id="feedback-${suggestion.id}" class="hidden" style="margin-bottom: 12px;">
+                            <div style="font-weight: 500; color: #333; margin-bottom: 5px; font-size: 0.85em;">💬 Your feedback:</div>
+                            <textarea id="feedback-text-${suggestion.id}" placeholder="Tell the AI how to improve this suggestion (e.g., 'Make it shorter', 'Add more metrics', 'I didn't work on AI projects')..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em; min-height: 60px; resize: vertical;"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 8px;">
+                                <button onclick="refineSuggestion('${suggestion.id}')" style="background: #667eea; padding: 8px 16px; font-size: 0.85em;">🔄 Refine</button>
+                                <button onclick="hideFeedback('${suggestion.id}')" style="background: #6c757d; padding: 8px 16px; font-size: 0.85em;">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="suggestion-actions" style="display: flex; border-top: 1px solid #e0e0e0;">
+                        <button onclick="acceptSuggestion(${index}, '${suggestion.id}')" style="flex: 1; background: #28a745; border-radius: 0; padding: 12px;">✓ Accept</button>
+                        <button onclick="showFeedback('${suggestion.id}')" style="flex: 1; background: #667eea; border-radius: 0; padding: 12px;">💬 Refine</button>
+                        <button onclick="rejectSuggestion(${index}, '${suggestion.id}')" style="flex: 1; background: #dc3545; border-radius: 0; padding: 12px;">✗ Reject</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Show/hide feedback input
+        function showFeedback(suggestionId) {
+            document.getElementById(`feedback-${suggestionId}`).classList.remove('hidden');
+        }
+        
+        function showFeedbackForAccepted(suggestionId) {
+            console.log('showFeedbackForAccepted called with:', suggestionId);
+            
+            // Find the card first
+            const card = document.querySelector(`.suggestion-card[data-id="${suggestionId}"]`);
+            if (!card) {
+                console.error('Card not found for:', suggestionId);
+                alert('Could not find the suggestion card. Please refresh the page.');
+                return;
+            }
+            
+            const contentDiv = card.querySelector('.suggestion-content');
+            if (!contentDiv) {
+                alert('Could not open feedback form. Please refresh and try again.');
+                return;
+            }
+            
+            // Always remove existing feedback div and create a new one with proper event listeners
+            let feedbackDiv = document.getElementById(`feedback-${suggestionId}`);
+            if (feedbackDiv) {
+                feedbackDiv.remove();
+            }
+            
+            console.log('Creating new feedback div for accepted suggestion:', suggestionId);
+            
+            // Create new feedback div with proper event listeners
+            feedbackDiv = document.createElement('div');
+            feedbackDiv.id = `feedback-${suggestionId}`;
+            feedbackDiv.style.cssText = 'margin-bottom: 12px; margin-top: 12px; padding: 15px; background: #e8f4fd; border-radius: 8px; border: 1px solid #bee5eb;';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.style.cssText = 'font-weight: 500; color: #333; margin-bottom: 8px; font-size: 0.9em;';
+            titleDiv.textContent = '💬 Refine this accepted suggestion:';
+            
+            const textarea = document.createElement('textarea');
+            textarea.id = `feedback-text-${suggestionId}`;
+            textarea.placeholder = "How would you like to change this? (e.g., 'Make it shorter', 'Add specific metrics', 'Use different action verb')";
+            textarea.style.cssText = 'width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em; min-height: 70px; resize: vertical; box-sizing: border-box;';
+            
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.style.cssText = 'display: flex; gap: 10px; margin-top: 10px;';
+            
+            const refineBtn = document.createElement('button');
+            refineBtn.type = 'button';
+            refineBtn.textContent = '🔄 Refine';
+            refineBtn.style.cssText = 'background: #667eea; color: white; padding: 10px 20px; font-size: 0.9em; border-radius: 5px; border: none; cursor: pointer;';
+            refineBtn.addEventListener('click', function() {
+                console.log('Refine button clicked, calling refineSuggestion with:', suggestionId);
+                refineSuggestion(suggestionId);
+            });
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.style.cssText = 'background: #6c757d; color: white; padding: 10px 20px; font-size: 0.9em; border-radius: 5px; border: none; cursor: pointer;';
+            cancelBtn.addEventListener('click', function() {
+                feedbackDiv.remove();
+            });
+            
+            buttonsDiv.appendChild(refineBtn);
+            buttonsDiv.appendChild(cancelBtn);
+            
+            feedbackDiv.appendChild(titleDiv);
+            feedbackDiv.appendChild(textarea);
+            feedbackDiv.appendChild(buttonsDiv);
+            
+            contentDiv.appendChild(feedbackDiv);
+            
+            // Focus the textarea
+            setTimeout(() => {
+                textarea.focus();
+            }, 100);
+        }
+        
+        function hideFeedback(suggestionId) {
+            document.getElementById(`feedback-${suggestionId}`).classList.add('hidden');
+            document.getElementById(`feedback-text-${suggestionId}`).value = '';
+        }
+        
+        // Refine suggestion based on feedback
+        async function refineSuggestion(suggestionId) {
+            console.log('refineSuggestion called with:', suggestionId);
+            
+            const feedbackTextEl = document.getElementById(`feedback-text-${suggestionId}`);
+            if (!feedbackTextEl) {
+                console.error('Feedback textarea not found for:', suggestionId);
+                alert('Could not find feedback input. Please try again.');
+                return;
+            }
+            
+            const feedbackText = feedbackTextEl.value.trim();
+            if (!feedbackText) {
+                alert('Please enter your feedback first');
+                return;
+            }
+            
+            try {
+                const feedbackDiv = document.getElementById(`feedback-${suggestionId}`);
+                const card = document.querySelector(`.suggestion-card[data-id="${suggestionId}"]`);
+                const isAccepted = card && card.dataset.accepted === 'true';
+                
+                console.log('Refining suggestion, isAccepted:', isAccepted);
+                
+                if (feedbackDiv) {
+                    feedbackDiv.innerHTML = '<div style="padding: 10px; color: #667eea;">🔄 Refining suggestion...</div>';
+                }
+                
+                const url = `${API_BASE}/suggestions/${suggestionId}/refine?feedback=${encodeURIComponent(feedbackText)}`;
+                console.log('Calling API:', url);
+                
+                const response = await fetch(url, {
+                    method: 'POST'
+                });
+                
+                console.log('Response status:', response.status);
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Failed to parse response:', e);
+                    if (feedbackDiv) {
+                        feedbackDiv.innerHTML = `<div style="padding: 10px; color: #dc3545;">✗ Server error: ${responseText.substring(0, 100)}</div>`;
+                    }
+                    return;
+                }
+                
+                if (response.ok) {
+                    console.log('Refine successful:', data);
+                    
+                    // Update the suggestion display in the card
+                    const suggestedEl = document.getElementById(`suggested-${suggestionId}`);
+                    const reasonEl = document.getElementById(`reason-${suggestionId}`);
+                    
+                    if (suggestedEl) {
+                        suggestedEl.textContent = data.suggested_text;
+                        // Flash highlight to show update
+                        suggestedEl.style.transition = 'background 0.3s';
+                        suggestedEl.style.background = '#d4edda';
+                        setTimeout(() => { suggestedEl.style.background = '#f0fff4'; }, 1000);
+                    }
+                    if (reasonEl) {
+                        reasonEl.textContent = data.reason;
+                    }
+                    
+                    // Update in allSuggestions array - handle both string and number ID comparison
+                    const sug = allSuggestions.find(s => String(s.id) === String(suggestionId));
+                    if (sug) {
+                        sug.suggested_text = data.suggested_text;
+                        sug.reason = data.reason;
+                        console.log('Updated allSuggestions');
+                    }
+                    
+                    // If this suggestion was already accepted, update the preview
+                    if (isAccepted) {
+                        const acceptedIdx = acceptedSuggestions.findIndex(s => String(s.id) === String(suggestionId));
+                        if (acceptedIdx !== -1) {
+                            acceptedSuggestions[acceptedIdx].suggested_text = data.suggested_text;
+                            acceptedSuggestions[acceptedIdx].reason = data.reason;
+                            updatePreview();
+                            console.log('Updated acceptedSuggestions and preview');
+                        }
+                    }
+                    
+                    // Save state after refining
+                    saveState();
+                    
+                    // Show success message - make it very visible
+                    showStatus('suggestionsStatus', `✓ Suggestion refined successfully!`, 'success');
+                    
+                    // Update feedback div with success and option to refine more
+                    if (feedbackDiv) {
+                        // Clear existing content
+                        feedbackDiv.innerHTML = '';
+                        
+                        // Create success message
+                        const successDiv = document.createElement('div');
+                        successDiv.style.cssText = 'padding: 12px; background: #d4edda; color: #155724; border-radius: 8px; margin-bottom: 12px; font-weight: 500;';
+                        successDiv.textContent = '✓ Suggestion refined! The suggested text has been updated above.';
+                        
+                        const titleDiv = document.createElement('div');
+                        titleDiv.style.cssText = 'font-weight: 500; color: #333; margin-bottom: 5px; font-size: 0.85em;';
+                        titleDiv.textContent = '💬 Need more changes?';
+                        
+                        const textarea = document.createElement('textarea');
+                        textarea.id = `feedback-text-${suggestionId}`;
+                        textarea.placeholder = 'Enter additional feedback to refine further...';
+                        textarea.style.cssText = 'width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em; min-height: 60px; resize: vertical; box-sizing: border-box;';
+                        
+                        const buttonsDiv = document.createElement('div');
+                        buttonsDiv.style.cssText = 'display: flex; gap: 10px; margin-top: 8px;';
+                        
+                        const refineBtn = document.createElement('button');
+                        refineBtn.type = 'button';
+                        refineBtn.textContent = '🔄 Refine Again';
+                        refineBtn.style.cssText = 'background: #667eea; color: white; padding: 8px 16px; font-size: 0.85em; border-radius: 5px; border: none; cursor: pointer;';
+                        refineBtn.addEventListener('click', function() {
+                            refineSuggestion(suggestionId);
+                        });
+                        
+                        const doneBtn = document.createElement('button');
+                        doneBtn.type = 'button';
+                        doneBtn.textContent = 'Done';
+                        doneBtn.style.cssText = 'background: #6c757d; color: white; padding: 8px 16px; font-size: 0.85em; border-radius: 5px; border: none; cursor: pointer;';
+                        doneBtn.addEventListener('click', function() {
+                            hideFeedback(suggestionId);
+                        });
+                        
+                        buttonsDiv.appendChild(refineBtn);
+                        buttonsDiv.appendChild(doneBtn);
+                        
+                        feedbackDiv.appendChild(successDiv);
+                        feedbackDiv.appendChild(titleDiv);
+                        feedbackDiv.appendChild(textarea);
+                        feedbackDiv.appendChild(buttonsDiv);
+                    }
+                } else {
+                    console.error('Refine failed:', data);
+                    showStatus('suggestionsStatus', `✗ Failed to refine: ${data.detail || 'Unknown error'}`, 'error');
+                    if (feedbackDiv) {
+                        createRetryFeedbackForm(feedbackDiv, suggestionId, data.detail || 'Failed to refine');
+                    }
+                }
+            } catch (error) {
+                console.error('Error refining:', error);
+                showStatus('suggestionsStatus', `✗ Error: ${error.message}`, 'error');
+                const feedbackDiv = document.getElementById(`feedback-${suggestionId}`);
+                if (feedbackDiv) {
+                    createRetryFeedbackForm(feedbackDiv, suggestionId, error.message);
+                }
+            }
+        }
+        
+        function createRetryFeedbackForm(feedbackDiv, suggestionId, errorMessage) {
+            feedbackDiv.innerHTML = '';
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'padding: 10px; color: #dc3545; margin-bottom: 10px;';
+            errorDiv.textContent = '✗ ' + errorMessage;
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.style.cssText = 'font-weight: 500; color: #333; margin-bottom: 5px; font-size: 0.85em;';
+            titleDiv.textContent = '💬 Try again:';
+            
+            const textarea = document.createElement('textarea');
+            textarea.id = `feedback-text-${suggestionId}`;
+            textarea.placeholder = 'Enter your feedback...';
+            textarea.style.cssText = 'width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em; min-height: 60px; resize: vertical; box-sizing: border-box;';
+            
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.style.cssText = 'display: flex; gap: 10px; margin-top: 8px;';
+            
+            const retryBtn = document.createElement('button');
+            retryBtn.type = 'button';
+            retryBtn.textContent = '🔄 Try Again';
+            retryBtn.style.cssText = 'background: #667eea; color: white; padding: 8px 16px; font-size: 0.85em; border-radius: 5px; border: none; cursor: pointer;';
+            retryBtn.addEventListener('click', function() {
+                refineSuggestion(suggestionId);
+            });
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.style.cssText = 'background: #6c757d; color: white; padding: 8px 16px; font-size: 0.85em; border-radius: 5px; border: none; cursor: pointer;';
+            cancelBtn.addEventListener('click', function() {
+                hideFeedback(suggestionId);
+            });
+            
+            buttonsDiv.appendChild(retryBtn);
+            buttonsDiv.appendChild(cancelBtn);
+            
+            feedbackDiv.appendChild(errorDiv);
+            feedbackDiv.appendChild(titleDiv);
+            feedbackDiv.appendChild(textarea);
+            feedbackDiv.appendChild(buttonsDiv);
+        }
+        
+        // Toggle preview mode
+        function togglePreviewMode() {
+            const panel = document.getElementById('previewPanel');
+            const toggle = document.getElementById('previewToggle');
+            
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                toggle.style.background = '#667eea';
+                toggle.style.color = 'white';
+                updatePreview();
+            } else {
+                panel.classList.add('hidden');
+                toggle.style.background = '#f8f9fa';
+                toggle.style.color = '#333';
+            }
+        }
+        
+        // Base score for comparison (set when suggestions are generated)
+        let baseMatchScore = 50; // Default starting score
+        
+        // Update export counter and score display
+        function updateExportCounter() {
+            const counter = document.getElementById('exportChangesCount');
+            const copyAllSection = document.getElementById('copyAllSection');
+            const count = acceptedSuggestions.length;
+            
+            if (counter) {
+                counter.textContent = `${count} change${count !== 1 ? 's' : ''}`;
+            }
+            
+            // Show/hide copy all section
+            if (copyAllSection) {
+                if (count > 0) {
+                    copyAllSection.classList.remove('hidden');
+                } else {
+                    copyAllSection.classList.add('hidden');
+                }
+            }
+            
+            // Update score comparison card
+            updateScoreDisplay();
+        }
+        
+        function updateScoreDisplay() {
+            const scoreCard = document.getElementById('scoreComparisonCard');
+            if (!scoreCard) return;
+            
+            // Show card only if there are accepted suggestions
+            if (acceptedSuggestions.length > 0) {
+                scoreCard.classList.remove('hidden');
+                
+                // Calculate improvement from accepted suggestions
+                let totalImprovement = 0;
+                acceptedSuggestions.forEach(sug => {
+                    totalImprovement += (sug.expected_score_delta || 0);
+                });
+                
+                const newScore = Math.min(100, baseMatchScore + totalImprovement);
+                
+                // Update displays
+                document.getElementById('originalScoreDisplay').textContent = baseMatchScore.toFixed(0) + '%';
+                document.getElementById('newScoreDisplay').textContent = newScore.toFixed(0) + '%';
+                document.getElementById('originalScoreBar').style.width = baseMatchScore + '%';
+                document.getElementById('newScoreBar').style.width = newScore + '%';
+                document.getElementById('acceptedCountDisplay').textContent = acceptedSuggestions.length;
+                
+                // Show improvement badge
+                const improvementBadge = document.getElementById('scoreImprovement');
+                if (totalImprovement > 0) {
+                    improvementBadge.textContent = '+' + totalImprovement.toFixed(0) + '%';
+                    improvementBadge.style.display = 'inline';
+                } else {
+                    improvementBadge.style.display = 'none';
+                }
+            } else {
+                scoreCard.classList.add('hidden');
+            }
+        }
+        
+        // Update preview with accepted suggestions - Full Resume Format
+        function updatePreview() {
+            // Update accepted count
+            document.getElementById('acceptedCount').textContent = `${acceptedSuggestions.length} change${acceptedSuggestions.length !== 1 ? 's' : ''} accepted`;
+            
+            if (!currentResumeData) {
+                return;
+            }
+            
+            // Create a deep copy of resume data to apply changes
+            const modifiedResume = JSON.parse(JSON.stringify(currentResumeData));
+            
+            // Build a map of changes by section_id
+            const changesMap = {};
+            acceptedSuggestions.forEach(sug => {
+                changesMap[sug.section_id] = sug.suggested_text;
+                // Also map by original text for fallback matching
+                changesMap[sug.original_text] = { suggested: sug.suggested_text, section_id: sug.section_id };
+            });
+            
+            // Personal Info
+            const personalInfo = modifiedResume.personal_info || {};
+            document.getElementById('previewPanelPersonalInfo').innerHTML = `
+                <h2 style="margin: 0 0 5px 0; color: #333;">${escapeHtml(personalInfo.name || 'Name not found')}</h2>
+                <div style="color: #666; font-size: 0.95em;">
+                    ${personalInfo.email ? `<span>📧 ${escapeHtml(personalInfo.email)}</span>` : ''}
+                    ${personalInfo.phone ? `<span style="margin-left: 15px;">📱 ${escapeHtml(personalInfo.phone)}</span>` : ''}
+                    ${personalInfo.location ? `<span style="margin-left: 15px;">📍 ${escapeHtml(personalInfo.location)}</span>` : ''}
+                </div>
+            `;
+            
+            // Summary - check for changes
+            const summarySection = document.getElementById('previewPanelSummarySection');
+            if (modifiedResume.summary) {
+                summarySection.style.display = 'block';
+                let summaryText = modifiedResume.summary;
+                let isChanged = false;
+                
+                // Check if summary was changed
+                if (changesMap['summary']) {
+                    summaryText = changesMap['summary'];
+                    isChanged = true;
+                }
+                
+                let summaryHtml = escapeHtml(summaryText)
+                    .split('\n')
+                    .filter(line => line.trim())
+                    .map(line => {
+                        line = line.trim();
+                        if (line.startsWith('•') || line.startsWith('-')) {
+                            return `<div style="margin-bottom: 8px; padding-left: 5px;">${line}</div>`;
+                        }
+                        return `<div style="margin-bottom: 8px;">${line}</div>`;
+                    })
+                    .join('');
+                
+                if (isChanged) {
+                    summaryHtml = `<div style="background: #d4edda; padding: 10px; border-radius: 5px; border-left: 3px solid #28a745;">${summaryHtml}</div>`;
+                }
+                document.getElementById('previewPanelSummary').innerHTML = summaryHtml;
+            } else {
+                summarySection.style.display = 'none';
+            }
+            
+            // Experience - apply changes to bullets
+            const expSection = document.getElementById('previewPanelExperienceSection');
+            if (modifiedResume.experience && modifiedResume.experience.length > 0) {
+                expSection.style.display = 'block';
+                document.getElementById('previewPanelExperience').innerHTML = modifiedResume.experience.map((exp, expIdx) => {
+                    let bulletsHtml = '';
+                    if (exp.bullets && exp.bullets.length > 0) {
+                        bulletsHtml = `<ul style="margin: 10px 0 0 20px; color: #555; font-size: 0.9em; line-height: 1.5;">
+                            ${exp.bullets.map((b, bulletIdx) => {
+                                const sectionId = `experience_${expIdx}_bullet_${bulletIdx}`;
+                                let bulletText = b.text || '';
+                                let isChanged = false;
+                                
+                                // Check if this bullet was changed
+                                if (changesMap[sectionId]) {
+                                    bulletText = changesMap[sectionId];
+                                    isChanged = true;
+                                } else {
+                                    // Fallback: check by original text
+                                    const change = changesMap[bulletText];
+                                    if (change && change.suggested) {
+                                        bulletText = change.suggested;
+                                        isChanged = true;
+                                    }
+                                }
+                                
+                                if (isChanged) {
+                                    return `<li style="margin-bottom: 5px; background: #d4edda; padding: 5px 8px; border-radius: 3px; border-left: 2px solid #28a745;">${escapeHtml(bulletText)}</li>`;
+                                }
+                                return `<li style="margin-bottom: 5px;">${escapeHtml(bulletText)}</li>`;
+                            }).join('')}
+                        </ul>`;
+                    }
+                    
+                    return `
+                        <div style="margin-bottom: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #667eea;">
+                            <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                                <strong style="color: #333;">${escapeHtml(exp.title || '')}</strong>
+                                <span style="color: #888; font-size: 0.9em;">${escapeHtml(exp.start_date || '')} - ${escapeHtml(exp.end_date || 'Present')}</span>
+                            </div>
+                            <div style="color: #667eea; font-size: 0.95em; margin-top: 3px;">${escapeHtml(exp.company || '')}</div>
+                            ${bulletsHtml}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                expSection.style.display = 'none';
+            }
+            
+            // Education
+            const eduSection = document.getElementById('previewPanelEducationSection');
+            if (modifiedResume.education && modifiedResume.education.length > 0) {
+                eduSection.style.display = 'block';
+                document.getElementById('previewPanelEducation').innerHTML = modifiedResume.education.map(edu => `
+                    <div style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                        <strong style="color: #333;">${escapeHtml(edu.degree || '')}</strong>
+                        <div style="color: #667eea; font-size: 0.9em;">${escapeHtml(edu.institution || '')}</div>
+                        ${edu.graduation_date ? `<div style="color: #888; font-size: 0.85em;">${escapeHtml(edu.graduation_date)}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                eduSection.style.display = 'none';
+            }
+            
+            // Skills - check for added skills
+            const skillsSection = document.getElementById('previewPanelSkillsSection');
+            let skills = modifiedResume.skills || [];
+            let addedSkills = [];
+            
+            // Check for skill suggestions
+            acceptedSuggestions.forEach(sug => {
+                if (sug.section_type === 'skill' && sug.suggested_text) {
+                    // Add new skills that aren't already present
+                    const newSkills = sug.suggested_text.split(',').map(s => s.trim()).filter(s => s);
+                    newSkills.forEach(s => {
+                        if (!skills.includes(s)) {
+                            addedSkills.push(s);
+                        }
+                    });
+                }
+            });
+            
+            if (skills.length > 0 || addedSkills.length > 0) {
+                skillsSection.style.display = 'block';
+                let skillsHtml = skills.map(skill => `
+                    <span style="background: #667eea; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.85em;">${escapeHtml(skill)}</span>
+                `).join('');
+                
+                // Add new skills with highlight
+                skillsHtml += addedSkills.map(skill => `
+                    <span style="background: #28a745; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.85em; border: 2px solid #1e7e34;">✨ ${escapeHtml(skill)}</span>
+                `).join('');
+                
+                document.getElementById('previewPanelSkills').innerHTML = skillsHtml;
+            } else {
+                skillsSection.style.display = 'none';
+            }
+        }
+        
+        let currentResumeId = null;
+        let currentJdId = null;
+        let currentSessionId = null;
+        
+        // ===== LOCAL STORAGE PERSISTENCE =====
+        const STORAGE_KEYS = {
+            JD_DATA: 'perfectResume_jdData',
+            JD_TEXT: 'perfectResume_jdText',
+            SUGGESTIONS: 'perfectResume_suggestions',
+            ACCEPTED: 'perfectResume_accepted',
+            SUMMARY: 'perfectResume_summary'
+        };
+        
+        function saveState() {
+            try {
+                if (currentJdData) {
+                    localStorage.setItem(STORAGE_KEYS.JD_DATA, JSON.stringify(currentJdData));
+                }
+                if (allSuggestions.length > 0) {
+                    localStorage.setItem(STORAGE_KEYS.SUGGESTIONS, JSON.stringify(allSuggestions));
+                }
+                if (acceptedSuggestions.length > 0) {
+                    localStorage.setItem(STORAGE_KEYS.ACCEPTED, JSON.stringify(acceptedSuggestions));
+                }
+                // Save the summary content
+                const summaryContent = document.getElementById('summaryContent');
+                if (summaryContent && summaryContent.textContent) {
+                    localStorage.setItem(STORAGE_KEYS.SUMMARY, summaryContent.textContent);
+                }
+                // Save JD text
+                const jdText = document.getElementById('jdText');
+                if (jdText && jdText.value) {
+                    localStorage.setItem(STORAGE_KEYS.JD_TEXT, jdText.value);
+                }
+                console.log('✓ State saved to localStorage');
+            } catch (e) {
+                console.warn('Could not save state:', e);
+            }
+        }
+        
+        function restoreState() {
+            try {
+                // Restore JD text
+                const savedJdText = localStorage.getItem(STORAGE_KEYS.JD_TEXT);
+                if (savedJdText) {
+                    document.getElementById('jdText').value = savedJdText;
+                }
+                
+                // Restore JD data
+                const savedJdData = localStorage.getItem(STORAGE_KEYS.JD_DATA);
+                if (savedJdData) {
+                    currentJdData = JSON.parse(savedJdData);
+                    currentJdId = currentJdData.id || 'restored';
+                    displayJDInfo(currentJdData);
+                    populateJDPreview(currentJdData);
+                    console.log('✓ JD data restored');
+                }
+                
+                // Restore suggestions
+                const savedSuggestions = localStorage.getItem(STORAGE_KEYS.SUGGESTIONS);
+                const savedAccepted = localStorage.getItem(STORAGE_KEYS.ACCEPTED);
+                
+                if (savedSuggestions) {
+                    allSuggestions = JSON.parse(savedSuggestions);
+                    // Recalculate base score
+                    const totalPossibleImprovement = allSuggestions.reduce((sum, s) => sum + (s.expected_score_delta || 0), 0);
+                    baseMatchScore = Math.max(30, Math.min(70, 100 - totalPossibleImprovement));
+                }
+                if (savedAccepted) {
+                    acceptedSuggestions = JSON.parse(savedAccepted);
+                }
+                
+                if (allSuggestions.length > 0) {
+                    // Mark accepted suggestions
+                    const acceptedIds = new Set(acceptedSuggestions.map(s => s.id));
+                    allSuggestions.forEach(s => {
+                        s._accepted = acceptedIds.has(s.id);
+                    });
+                    
+                    // Render suggestions
+                    renderRestoredSuggestions();
+                    
+                    // Restore summary
+                    const savedSummary = localStorage.getItem(STORAGE_KEYS.SUMMARY);
+                    if (savedSummary) {
+                        const summaryDiv = document.getElementById('suggestionsSummary');
+                        const summaryContent = document.getElementById('summaryContent');
+                        summaryDiv.classList.remove('hidden');
+                        summaryContent.textContent = savedSummary;
+                    }
+                    
+                    updatePreview();
+                    updateExportCounter();
+                    console.log('✓ Suggestions restored');
+                }
+            } catch (e) {
+                console.warn('Could not restore state:', e);
+            }
+        }
+        
+        function renderRestoredSuggestions() {
+            const listContainer = document.getElementById('suggestionsList');
+            const previewControls = document.getElementById('previewControls');
+            
+            if (allSuggestions.length === 0) {
+                listContainer.innerHTML = '';
+                return;
+            }
+            
+            // Group by category
+            const grouped = groupSuggestionsByCategory(allSuggestions);
+            
+            let html = '';
+            for (const [category, group] of Object.entries(grouped)) {
+                if (group.suggestions.length === 0) continue;
+                
+                html += `
+                    <div class="suggestion-group" style="margin-bottom: 25px;">
+                        <h4 style="color: #667eea; margin-bottom: 15px; font-size: 1.1em;">
+                            ${group.icon} ${group.label} (${group.suggestions.length})
+                        </h4>
+                        ${group.suggestions.map(sug => renderSuggestionCardRestored(sug)).join('')}
+                    </div>
+                `;
+            }
+            
+            listContainer.innerHTML = html;
+            previewControls.classList.remove('hidden');
+        }
+        
+        function renderSuggestionCardRestored(suggestion) {
+            const index = suggestion._index;
+            const isAccepted = suggestion._accepted;
+            
+            const cardStyle = isAccepted 
+                ? 'background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 2px solid #28a745;'
+                : 'border: 1px solid #e0e0e0;';
+            
+            const actionsHtml = isAccepted
+                ? `<div style="flex: 2; text-align: center; color: #28a745; font-weight: bold; padding: 12px; background: #c3e6cb;">✓ ACCEPTED</div>
+                   <button type="button" onclick="showFeedbackForAccepted('${suggestion.id}')" style="flex: 1; background: #667eea; border-radius: 0; padding: 12px; cursor: pointer;">✏️ Refine</button>`
+                : `<button onclick="acceptSuggestion(${index}, '${suggestion.id}')" style="flex: 1; background: #28a745; border-radius: 0; padding: 12px;">✓ Accept</button>
+                   <button onclick="showFeedback('${suggestion.id}')" style="flex: 1; background: #667eea; border-radius: 0; padding: 12px;">💬 Refine</button>
+                   <button onclick="rejectSuggestion(${index}, '${suggestion.id}')" style="flex: 1; background: #dc3545; border-radius: 0; padding: 12px;">✗ Reject</button>`;
+            
+            return `
+                <div class="suggestion-card" data-id="${suggestion.id}" data-index="${index}" data-accepted="${isAccepted}" style="margin-bottom: 20px; border-radius: 10px; overflow: hidden; ${cardStyle}">
+                    <div class="suggestion-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: ${isAccepted ? '#c3e6cb' : '#f8f9fa'}; border-bottom: 1px solid #e0e0e0;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            ${getPriorityBadge(suggestion.priority)}
+                            <span style="color: #28a745; font-weight: 600; font-size: 0.9em;">+${(suggestion.expected_score_delta || 0).toFixed(1)} pts</span>
+                        </div>
+                        <span class="suggestion-type" style="background: ${suggestion.section_type === 'bullet' ? '#667eea' : suggestion.section_type === 'skill' ? '#28a745' : '#17a2b8'}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 500; text-transform: uppercase;">
+                            ${suggestion.section_type}
+                        </span>
+                    </div>
+                    <div class="suggestion-content" style="padding: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <div style="color: #dc3545; font-weight: 600; margin-bottom: 5px; font-size: 0.85em;">❌ CURRENT</div>
+                                <div style="background: #fff5f5; padding: 12px; border-left: 3px solid #dc3545; border-radius: 5px; color: #333; font-size: 0.9em; line-height: 1.5; max-height: 150px; overflow-y: auto;">
+                                    ${escapeHtml(suggestion.original_text)}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <div style="color: #28a745; font-weight: 600; font-size: 0.85em;">✅ SUGGESTED</div>
+                                    <button onclick="copySuggestion('${suggestion.id}')" style="background: #667eea; color: white; border: none; padding: 5px 12px; font-size: 0.8em; border-radius: 5px; cursor: pointer; font-weight: 500;" title="Copy to clipboard">📋 Copy</button>
+                                </div>
+                                <div id="suggested-${suggestion.id}" style="background: #f0fff4; padding: 12px; border-left: 3px solid #28a745; border-radius: 5px; color: #333; font-size: 0.9em; line-height: 1.5; max-height: 150px; overflow-y: auto;">
+                                    ${escapeHtml(suggestion.suggested_text)}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="font-weight: 600; color: #667eea; margin-bottom: 5px; font-size: 0.85em;">💡 Why this helps</div>
+                            <div id="reason-${suggestion.id}" style="color: #444; line-height: 1.5; font-size: 0.9em;">${escapeHtml(suggestion.reason)}</div>
+                            ${suggestion.jd_mapping ? `
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(102, 126, 234, 0.2);">
+                                    <span style="color: #667eea; font-weight: 500; font-size: 0.8em;">🎯 JD Match:</span>
+                                    <span style="color: #555; font-size: 0.85em;">${escapeHtml(suggestion.jd_mapping)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Feedback Input -->
+                        <div id="feedback-${suggestion.id}" class="hidden" style="margin-bottom: 12px;">
+                            <div style="font-weight: 500; color: #333; margin-bottom: 5px; font-size: 0.85em;">💬 Your feedback:</div>
+                            <textarea id="feedback-text-${suggestion.id}" placeholder="Tell the AI how to improve this suggestion..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em; min-height: 60px; resize: vertical;"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 8px;">
+                                <button onclick="refineSuggestion('${suggestion.id}')" style="background: #667eea; padding: 8px 16px; font-size: 0.85em;">🔄 Refine</button>
+                                <button onclick="hideFeedback('${suggestion.id}')" style="background: #6c757d; padding: 8px 16px; font-size: 0.85em;">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="suggestion-actions" style="display: flex; border-top: 1px solid #e0e0e0;">
+                        ${actionsHtml}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Copy suggestion text to clipboard
+        function copySuggestion(suggestionId) {
+            const textEl = document.getElementById(`suggested-${suggestionId}`);
+            if (textEl) {
+                const text = textEl.textContent.trim();
+                navigator.clipboard.writeText(text).then(() => {
+                    showStatus('suggestionsStatus', '📋 Copied to clipboard!', 'success');
+                }).catch(err => {
+                    // Fallback for older browsers
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showStatus('suggestionsStatus', '📋 Copied to clipboard!', 'success');
+                });
+            }
+        }
+        
+        // Copy all accepted suggestions
+        function copyAllAccepted() {
+            if (acceptedSuggestions.length === 0) {
+                alert('No accepted suggestions to copy. Please accept some suggestions first.');
+                return;
+            }
+            
+            let text = '=== ACCEPTED RESUME CHANGES ===\n\n';
+            
+            acceptedSuggestions.forEach((sug, i) => {
+                text += `--- Change ${i + 1} (${sug.section_type || 'bullet'}) ---\n`;
+                text += `ORIGINAL:\n${sug.original_text}\n\n`;
+                text += `NEW VERSION:\n${sug.suggested_text}\n\n`;
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('exportStatus', `📋 Copied ${acceptedSuggestions.length} changes to clipboard!`, 'success');
+            }).catch(err => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showStatus('exportStatus', `📋 Copied ${acceptedSuggestions.length} changes to clipboard!`, 'success');
+            });
+        }
+        
+        function clearSavedState() {
+            Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+            console.log('✓ Saved state cleared');
+        }
+        
+        function startNewSession() {
+            if (!confirm('This will clear your saved JD and suggestions. Continue?')) {
+                return;
+            }
+            
+            // Clear localStorage
+            clearSavedState();
+            
+            // Reset UI
+            document.getElementById('jdText').value = '';
+            document.getElementById('jdInfo').classList.add('hidden');
+            document.getElementById('jdPreview').classList.add('hidden');
+            document.getElementById('suggestionsSummary').classList.add('hidden');
+            document.getElementById('suggestionsList').innerHTML = '';
+            document.getElementById('previewControls').classList.add('hidden');
+            document.getElementById('previewPanel').classList.add('hidden');
+            
+            // Reset state variables
+            currentJdId = null;
+            currentJdData = null;
+            allSuggestions = [];
+            acceptedSuggestions = [];
+            
+            // Update counters
+            updateExportCounter();
+            
+            showStatus('exportStatus', '✓ Session cleared. Ready for new JD.', 'success');
+        }
+        
+        function displayJDInfo(parsed) {
+            // Update basic info
+            document.getElementById('jdId').textContent = parsed.id || 'restored';
+            document.getElementById('jdRole').textContent = parsed.role_title || 'Job Description';
+            
+            // Update company
+            const companyDiv = document.getElementById('jdCompany');
+            companyDiv.textContent = parsed.company || '';
+            companyDiv.style.display = parsed.company ? 'inline' : 'none';
+            
+            // Update Role Summary
+            const roleSummaryDiv = document.getElementById('jdRoleSummary');
+            if (parsed.role_summary) {
+                document.getElementById('jdRoleSummaryText').textContent = parsed.role_summary;
+                roleSummaryDiv.classList.remove('hidden');
+            } else {
+                roleSummaryDiv.classList.add('hidden');
+            }
+            
+            // Update stats
+            const mustHaveCount = (parsed.must_have_requirements || []).length;
+            const niceToHaveCount = (parsed.nice_to_have_requirements || []).length;
+            const techSkillCount = (parsed.technical_skills || []).length;
+            const softSkillCount = (parsed.soft_skills || []).length;
+            const keywordsCount = (parsed.keywords_to_include || []).length;
+            
+            document.getElementById('jdMustHaveCount').textContent = mustHaveCount;
+            document.getElementById('jdNiceToHaveCount').textContent = niceToHaveCount;
+            document.getElementById('jdTechSkillsCount').textContent = techSkillCount;
+            document.getElementById('jdSoftSkillsCount').textContent = softSkillCount;
+            document.getElementById('jdKeywordsCount').textContent = keywordsCount;
+            
+            // Show the JD info container
+            document.getElementById('jdInfo').classList.remove('hidden');
+        }
+        
+        // Check server connectivity on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    console.log('✓ Server is running');
+                    // Restore saved state after confirming server is up
+                    restoreState();
+                } else {
+                    console.warn('⚠ Server responded but with error status');
+                }
+            } catch (error) {
+                console.error('✗ Cannot connect to server:', error);
+                alert('Warning: Cannot connect to server\n\nPlease make sure the server is running:\n1. Open terminal\n2. cd to Perfect Resume folder\n3. Run: python app.py');
+            }
+        });
+        
+        function showStatus(elementId, message, type) {
+            const statusDiv = document.getElementById(elementId);
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        async function uploadResume() {
+            const fileInput = document.getElementById('resumeFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showStatus('resumeStatus', 'Please select a file', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                showStatus('resumeStatus', 'Uploading and parsing resume...', 'info');
+                const response = await fetch(`${API_BASE}/upload-resume`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentResumeId = data.resume_id;
+                    const parsed = data.parsed_data;
+                    
+                    // Update resume info display
+                    displayResumeInfo(parsed);
+                    
+                    showStatus('resumeStatus', '✓ Resume saved as default!', 'success');
+                    console.log('Parsed Resume Data:', parsed);
+                } else {
+                    const errorMsg = data.detail || data.error || 'Unknown error occurred';
+                    showStatus('resumeStatus', `Error: ${errorMsg}`, 'error');
+                    console.error('Resume Parse Error:', data);
+                }
+            } catch (error) {
+                let errorMessage = error.message;
+                if (error.message === 'Failed to fetch') {
+                    errorMessage = 'Cannot connect to server. Please ensure the server is running.';
+                }
+                showStatus('resumeStatus', `Error: ${errorMessage}`, 'error');
+                console.error('Resume Upload Exception:', error);
+            }
+        }
+        
+        // Store parsed resume data for preview
+        let currentResumeData = null;
+        
+        function displayResumeInfo(parsed) {
+            currentResumeData = parsed;
+            
+            const name = parsed.personal_info?.name || 'Your Resume';
+            const expCount = parsed.experience?.length || 0;
+            const eduCount = parsed.education?.length || 0;
+            const skillCount = parsed.skills?.length || 0;
+            
+            document.getElementById('resumeName').textContent = name;
+            const summaryText = `${expCount} experience • ${eduCount} education • ${skillCount} skills`;
+            document.getElementById('resumeSummary').textContent = summaryText;
+            document.getElementById('resumeInfo').classList.remove('hidden');
+            
+            // Hide file input since we have a resume
+            document.getElementById('resumeFile').style.display = 'none';
+            document.querySelector('.section button[onclick="uploadResume()"]').style.display = 'none';
+            
+            // Populate preview content
+            populateResumePreview(parsed);
+        }
+        
+        function toggleResumePreview() {
+            const preview = document.getElementById('resumePreview');
+            preview.classList.toggle('hidden');
+        }
+        
+        // Store JD data for preview
+        let currentJdData = null;
+        
+        function toggleJDPreview() {
+            const preview = document.getElementById('jdPreview');
+            preview.classList.toggle('hidden');
+        }
+        
+        function populateJDPreview(parsed) {
+            // Unified tag style for all skills and keywords
+            const tagStyleUnified = 'background: #ede9fe; color: #5b21b6; padding: 5px 12px; border-radius: 15px; font-size: 0.85em; border: 1px solid #c4b5fd;';
+            
+            // Must-Have Requirements
+            const mustHaveList = document.getElementById('jdMustHaveList');
+            const mustHaveItems = parsed.must_have_requirements?.length > 0 ? parsed.must_have_requirements : parsed.requirements || [];
+            document.getElementById('jdMustHaveBadge').textContent = mustHaveItems.length;
+            
+            if (mustHaveItems.length > 0) {
+                mustHaveList.innerHTML = mustHaveItems.map(r => 
+                    `<li style="margin-bottom: 8px;">${escapeHtml(r)}</li>`
+                ).join('');
+            } else {
+                mustHaveList.innerHTML = '<li style="color: #999; font-style: italic;">No must-have requirements extracted</li>';
+            }
+            
+            // Nice-to-Have Requirements
+            const niceToHaveSection = document.getElementById('jdNiceToHaveSection');
+            const niceToHaveList = document.getElementById('jdNiceToHaveList');
+            const niceToHaveItems = parsed.nice_to_have_requirements?.length > 0 ? parsed.nice_to_have_requirements : parsed.preferred_qualifications || [];
+            document.getElementById('jdNiceToHaveBadge').textContent = niceToHaveItems.length;
+            
+            if (niceToHaveItems.length > 0) {
+                niceToHaveSection.style.display = 'block';
+                niceToHaveList.innerHTML = niceToHaveItems.map(r => 
+                    `<li style="margin-bottom: 8px;">${escapeHtml(r)}</li>`
+                ).join('');
+            } else {
+                niceToHaveSection.style.display = 'none';
+            }
+            
+            // Technical Skills - unified style
+            const techSkillsList = document.getElementById('jdTechnicalSkillsList');
+            const techSkills = parsed.technical_skills?.length > 0 ? parsed.technical_skills : parsed.required_skills || [];
+            if (techSkills.length > 0) {
+                techSkillsList.innerHTML = techSkills.map(s => 
+                    `<span style="${tagStyleUnified}">${escapeHtml(s)}</span>`
+                ).join('');
+            } else {
+                techSkillsList.innerHTML = '<span style="color: #999; font-style: italic;">No technical skills extracted</span>';
+            }
+            
+            // Soft Skills - unified style
+            const softSkillsSection = document.getElementById('jdSoftSkillsSection');
+            const softSkillsList = document.getElementById('jdSoftSkillsList');
+            const softSkills = parsed.soft_skills || [];
+            if (softSkills.length > 0) {
+                softSkillsSection.style.display = 'block';
+                softSkillsList.innerHTML = softSkills.map(s => 
+                    `<span style="${tagStyleUnified}">${escapeHtml(s)}</span>`
+                ).join('');
+            } else {
+                softSkillsSection.style.display = 'none';
+            }
+            
+            // Keywords - unified style
+            const keywordsList = document.getElementById('jdKeywordsList');
+            const keywords = parsed.keywords_to_include?.length > 0 ? parsed.keywords_to_include : parsed.keywords || [];
+            if (keywords.length > 0) {
+                keywordsList.innerHTML = keywords.map(k => 
+                    `<span style="${tagStyleUnified}">${escapeHtml(k)}</span>`
+                ).join('');
+            } else {
+                keywordsList.innerHTML = '<span style="color: #999; font-style: italic;">No specific keywords extracted</span>';
+            }
+            
+            // Responsibilities
+            const respSection = document.getElementById('jdResponsibilitiesSection');
+            const respList = document.getElementById('jdResponsibilities');
+            const respCount = parsed.responsibilities?.length || 0;
+            document.getElementById('jdRespCountBadge').textContent = respCount;
+            
+            if (respCount > 0) {
+                respSection.style.display = 'block';
+                respList.innerHTML = parsed.responsibilities.map(r => 
+                    `<li style="margin-bottom: 8px;">${escapeHtml(r)}</li>`
+                ).join('');
+            } else {
+                respSection.style.display = 'none';
+            }
+        }
+        
+        function populateResumePreview(parsed) {
+            // Personal Info
+            const personalInfo = parsed.personal_info || {};
+            
+            // Build contact items
+            let contactItems = [];
+            if (personalInfo.email) contactItems.push(`📧 ${escapeHtml(personalInfo.email)}`);
+            if (personalInfo.phone) contactItems.push(`📱 ${escapeHtml(personalInfo.phone)}`);
+            if (personalInfo.location) contactItems.push(`📍 ${escapeHtml(personalInfo.location)}`);
+            if (personalInfo.linkedin) {
+                const linkedinUrl = personalInfo.linkedin.startsWith('http') ? personalInfo.linkedin : `https://${personalInfo.linkedin}`;
+                contactItems.push(`🔗 <a href="${linkedinUrl}" target="_blank" style="color: #0077b5;">${escapeHtml(personalInfo.linkedin)}</a>`);
+            }
+            
+            document.getElementById('previewPersonalInfo').innerHTML = `
+                <div style="text-align: center;">
+                    <h2 style="margin: 0 0 8px 0; color: #1a1a2e; font-size: 1.5em;">${escapeHtml(personalInfo.name || 'Name not found')}</h2>
+                    <div style="color: #555; font-size: 0.9em; line-height: 1.8;">
+                        ${contactItems.join('<span style="margin: 0 10px; color: #ccc;">|</span>')}
+                    </div>
+                </div>
+            `;
+            
+            // Summary
+            const summarySection = document.getElementById('previewSummarySection');
+            if (parsed.summary) {
+                summarySection.classList.remove('hidden');
+                // Format summary - each bullet point on its own line
+                let summaryHtml = escapeHtml(parsed.summary)
+                    .split('\n')
+                    .filter(line => line.trim())
+                    .map(line => {
+                        line = line.trim();
+                        if (line.startsWith('•') || line.startsWith('-')) {
+                            return `<div style="margin-bottom: 8px; padding-left: 5px;">${line}</div>`;
+                        }
+                        return `<div style="margin-bottom: 8px;">${line}</div>`;
+                    })
+                    .join('');
+                document.getElementById('previewSummary').innerHTML = summaryHtml;
+            } else {
+                summarySection.classList.add('hidden');
+            }
+            
+            // Experience
+            const expSection = document.getElementById('previewExperienceSection');
+            if (parsed.experience && parsed.experience.length > 0) {
+                expSection.classList.remove('hidden');
+                document.getElementById('previewExperience').innerHTML = parsed.experience.map(exp => `
+                    <div style="margin-bottom: 15px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #667eea;">
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                            <strong style="color: #333;">${escapeHtml(exp.title || '')}</strong>
+                            <span style="color: #888; font-size: 0.9em;">${escapeHtml(exp.start_date || '')} - ${escapeHtml(exp.end_date || 'Present')}</span>
+                        </div>
+                        <div style="color: #667eea; font-size: 0.95em; margin-top: 3px;">${escapeHtml(exp.company || '')}</div>
+                        ${exp.bullets && exp.bullets.length > 0 ? `
+                            <ul style="margin: 10px 0 0 20px; color: #555; font-size: 0.9em; line-height: 1.5;">
+                                ${exp.bullets.map(b => `<li style="margin-bottom: 5px;">${escapeHtml(b.text || '')}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                `).join('');
+            } else {
+                expSection.classList.remove('hidden');
+                document.getElementById('previewExperience').innerHTML = '<div style="color: #999; font-style: italic;">No experience entries parsed. Check your resume format.</div>';
+            }
+            
+            // Education
+            const eduSection = document.getElementById('previewEducationSection');
+            if (parsed.education && parsed.education.length > 0) {
+                eduSection.classList.remove('hidden');
+                document.getElementById('previewEducation').innerHTML = parsed.education.map(edu => `
+                    <div style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                        <strong style="color: #333;">${escapeHtml(edu.degree || '')}</strong>
+                        <div style="color: #667eea; font-size: 0.9em;">${escapeHtml(edu.institution || '')}</div>
+                        ${edu.graduation_date ? `<div style="color: #888; font-size: 0.85em;">${escapeHtml(edu.graduation_date)}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                eduSection.classList.remove('hidden');
+                document.getElementById('previewEducation').innerHTML = '<div style="color: #999; font-style: italic;">No education entries parsed. Check your resume format.</div>';
+            }
+            
+            // Skills
+            const skillsSection = document.getElementById('previewSkillsSection');
+            if (parsed.skills && parsed.skills.length > 0) {
+                skillsSection.classList.remove('hidden');
+                document.getElementById('previewSkills').innerHTML = parsed.skills.map(skill => `
+                    <span style="background: #667eea; color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.85em;">${escapeHtml(skill)}</span>
+                `).join('');
+            } else {
+                skillsSection.classList.add('hidden');
+            }
+            
+        }
+        
+        async function deleteResume() {
+            if (!confirm('Delete your saved resume? You will need to upload a new one.')) {
+                return;
+            }
+            
+            try {
+                // Actually delete from database
+                await fetch(`${API_BASE}/resume/default`, { method: 'DELETE' });
+                console.log('Deleted resume from database');
+            } catch (error) {
+                console.log('Error deleting resume:', error);
+            }
+            
+            // Reset UI
+            document.getElementById('resumeInfo').classList.add('hidden');
+            document.getElementById('resumePreview').classList.add('hidden');
+            document.getElementById('resumeFile').style.display = 'block';
+            document.getElementById('resumeFile').value = '';
+            document.querySelector('.section button[onclick="uploadResume()"]').style.display = 'inline-block';
+            currentResumeId = null;
+            currentResumeData = null;
+            
+            showStatus('resumeStatus', 'Resume deleted. Please upload a new one.', 'info');
+        }
+        
+        async function loadDefaultResume() {
+            try {
+                const response = await fetch(`${API_BASE}/resume/default`);
+                if (response.ok) {
+                    const data = await response.json();
+                    currentResumeId = data.resume_id;
+                    displayResumeInfo(data.parsed_data);
+                    console.log('Loaded default resume:', data.parsed_data);
+                }
+            } catch (error) {
+                console.log('No default resume found or server not running');
+            }
+        }
+        
+        // Load default resume on page load
+        document.addEventListener('DOMContentLoaded', loadDefaultResume);
+        
+        async function parseJD() {
+            const jdInput = document.getElementById('jdInput').value.trim();
+            
+            if (!jdInput) {
+                showStatus('jdStatus', 'Please enter a job description', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('jdStatus', 'Parsing job description...', 'info');
+                
+                // Check if server is reachable first
+                try {
+                    const healthCheck = await fetch('/api/health');
+                    if (!healthCheck.ok) {
+                        throw new Error('Server health check failed');
+                    }
+                } catch (healthError) {
+                    showStatus('jdStatus', 'Error: Cannot connect to server. Make sure the server is running.', 'error');
+                    console.error('Server connection error:', healthError);
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE}/parse-jd`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ source: jdInput })
+                });
+                
+                if (!response.ok && response.status === 0) {
+                    throw new Error('Network error - server may not be running');
+                }
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentJdId = data.jd_id;
+                    const parsed = data.parsed_data;
+                    
+                    // Store for later use
+                    currentJdData = parsed;
+                    
+                    // Update basic info
+                    document.getElementById('jdId').textContent = data.jd_id;
+                    document.getElementById('jdRole').textContent = parsed.role_title || 'Job Description';
+                    
+                    // Update company
+                    const companyDiv = document.getElementById('jdCompany');
+                    companyDiv.textContent = parsed.company || '';
+                    
+                    // Update Role Summary
+                    const roleSummaryEl = document.getElementById('jdRoleSummary');
+                    if (parsed.role_summary) {
+                        roleSummaryEl.textContent = parsed.role_summary;
+                        roleSummaryEl.style.display = 'block';
+                    } else {
+                        // Fallback: generate a brief summary from available data
+                        let fallbackSummary = '';
+                        if (parsed.experience_level || parsed.industry_domain) {
+                            const parts = [];
+                            if (parsed.experience_level) parts.push(parsed.experience_level);
+                            if (parsed.industry_domain) parts.push(parsed.industry_domain);
+                            if (parsed.location) parts.push(parsed.location);
+                            fallbackSummary = parts.join(' • ');
+                        }
+                        if (fallbackSummary) {
+                            roleSummaryEl.textContent = fallbackSummary;
+                            roleSummaryEl.style.display = 'block';
+                    } else {
+                            roleSummaryEl.style.display = 'none';
+                        }
+                    }
+                    
+                    // Update Match-Focused counts
+                    const mustHaveCount = parsed.must_have_requirements?.length || parsed.requirements?.length || 0;
+                    const niceToHaveCount = parsed.nice_to_have_requirements?.length || parsed.preferred_qualifications?.length || 0;
+                    const techSkillCount = parsed.technical_skills?.length || parsed.required_skills?.length || 0;
+                    const softSkillCount = parsed.soft_skills?.length || 0;
+                    const keywordsCount = parsed.keywords_to_include?.length || parsed.keywords?.length || 0;
+                    
+                    document.getElementById('jdMustHaveCount').textContent = mustHaveCount;
+                    document.getElementById('jdNiceToHaveCount').textContent = niceToHaveCount;
+                    document.getElementById('jdTechnicalSkillsCount').textContent = techSkillCount;
+                    document.getElementById('jdSoftSkillsCount').textContent = softSkillCount;
+                    document.getElementById('jdKeywordsCount').textContent = keywordsCount;
+                    
+                    // Populate JD Preview
+                    populateJDPreview(parsed);
+                    
+                    document.getElementById('jdInfo').classList.remove('hidden');
+                    
+                    // Show parsing summary
+                    const summary = `Role: ${parsed.role_title || 'N/A'}` +
+                        (parsed.company ? ` | Company: ${parsed.company}` : '') +
+                        ` | Requirements: ${parsed.requirements.length} | Required Skills: ${parsed.required_skills.length} | Preferred Skills: ${parsed.preferred_skills.length}`;
+                    
+                    showStatus('jdStatus', `✓ Parsed successfully! ${summary}`, 'success');
+                    console.log('Parsed JD Data:', parsed);
+                    
+                    // Save state to localStorage
+                    saveState();
+                } else {
+                    const errorMsg = data.detail || data.error || `HTTP ${response.status}: ${response.statusText}`;
+                    showStatus('jdStatus', `Error: ${errorMsg}`, 'error');
+                    console.error('JD Parse Error:', data);
+                }
+            } catch (error) {
+                let errorMessage = error.message;
+                if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
+                    errorMessage = 'Cannot connect to server. Please ensure the server is running on http://127.0.0.1:8000';
+                }
+                showStatus('jdStatus', `Error: ${errorMessage}`, 'error');
+                console.error('JD Parse Exception:', error);
+            }
+        }
+        
+        // Store accepted suggestions for preview
+        let acceptedSuggestions = [];
+        let allSuggestions = [];
+        
+        async function getSuggestions() {
+            if (!currentJdId) {
+                showStatus('suggestionsStatus', 'Please parse job description first', 'error');
+                return;
+            }
+            
+            // Reset state
+            acceptedSuggestions = [];
+            allSuggestions = [];
+            
+            // Use default resume if no specific resume selected
+            const resumeParam = currentResumeId ? `resume_id=${currentResumeId}&` : '';
+            
+            try {
+                showStatus('suggestionsStatus', '🔄 Analyzing resume and generating prioritized suggestions...', 'info');
+                const response = await fetch(`${API_BASE}/suggestions?${resumeParam}jd_id=${currentJdId}&max_suggestions=10`, {
+                    method: 'POST'
+                });
+                
+                // Check if response is OK before parsing JSON
+                if (!response.ok) {
+                    let errorText = await response.text();
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        throw new Error(errorJson.detail || errorJson.message || 'API error');
+                    } catch (e) {
+                        // If error text is not JSON, use it directly
+                        throw new Error(errorText || `Server error: ${response.status} ${response.statusText}`);
+                    }
+                }
+                
+                // Try to parse JSON, but handle errors gracefully
+                let data;
+                const responseText = await response.text();
+                try {
+                    data = JSON.parse(responseText);
+                } catch (jsonError) {
+                    console.error('JSON parse error:', jsonError);
+                    console.error('Response text:', responseText.substring(0, 500));
+                    throw new Error(`Invalid response from server: ${responseText.substring(0, 100)}...`);
+                }
+                
+                if (response.ok) {
+                    // Capture session ID for export functionality
+                    if (data.session_id) {
+                        currentSessionId = data.session_id;
+                        console.log('Session ID set:', currentSessionId);
+                    }
+                    
+                    // Store all suggestions
+                    allSuggestions = data.suggestions || [];
+                    
+                    // Calculate base score (before any improvements)
+                    // Base score is inversely related to total possible improvement
+                    const totalPossibleImprovement = allSuggestions.reduce((sum, s) => sum + (s.expected_score_delta || 0), 0);
+                    baseMatchScore = Math.max(30, Math.min(70, 100 - totalPossibleImprovement));
+                    console.log('Base match score:', baseMatchScore, 'Total possible improvement:', totalPossibleImprovement);
+                    
+                    // Show AI Summary
+                    const summaryDiv = document.getElementById('suggestionsSummary');
+                    const summaryContent = document.getElementById('summaryContent');
+                    if (data.summary) {
+                        summaryContent.textContent = data.summary;
+                        summaryDiv.classList.remove('hidden');
+                    } else {
+                        summaryDiv.classList.add('hidden');
+                    }
+                    
+                    // Show preview controls
+                    const previewControls = document.getElementById('previewControls');
+                    
+                    const suggestionsDiv = document.getElementById('suggestionsList');
+                    if (!data.suggestions || data.suggestions.length === 0) {
+                        suggestionsDiv.innerHTML = `<div style="padding: 20px; text-align: center; color: #666; background: #f8f9fa; border-radius: 5px; margin-top: 15px;">
+                            <strong>No suggestions generated</strong><br><br>
+                            Possible reasons:<br>
+                            • Your resume already matches the job description well<br>
+                            • The AI couldn't find specific improvements to suggest<br>
+                            • There may be an API issue<br><br>
+                            <small>Check the server terminal for detailed error messages</small>
+                        </div>`;
+                        previewControls.classList.add('hidden');
+                        showStatus('suggestionsStatus', 'No suggestions generated. Check server terminal for details.', 'info');
+                    } else {
+                        previewControls.classList.remove('hidden');
+                        
+                        // Group suggestions by category
+                        const grouped = groupSuggestionsByCategory(data.suggestions);
+                        
+                        suggestionsDiv.innerHTML = renderGroupedSuggestions(grouped);
+                    }
+                    showStatus('suggestionsStatus', `✓ Generated ${data.suggestions.length} prioritized suggestions!`, 'success');
+                    
+                    // Save state to localStorage
+                    saveState();
+                } else {
+                    showStatus('suggestionsStatus', `Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showStatus('suggestionsStatus', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function acceptSuggestion(index, suggestionId) {
+            const card = document.querySelector(`.suggestion-card[data-id="${suggestionId}"]`) || document.querySelectorAll('.suggestion-card')[index];
+            const buttons = card.querySelectorAll('button');
+            
+            // Disable buttons and show loading
+            buttons.forEach(btn => btn.disabled = true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/suggestions/${suggestionId}/accept`, {
+                    method: 'POST'
+                });
+                
+                let data;
+                const responseText = await response.text();
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error('Invalid response from server');
+                }
+                
+                if (response.ok) {
+                    // Track accepted suggestion for preview
+                    const acceptedSug = allSuggestions.find(s => s.id === suggestionId);
+                    if (acceptedSug) {
+                        acceptedSug._accepted = true;
+                        acceptedSuggestions.push(acceptedSug);
+                        updatePreview();
+                        updateExportCounter();
+                        saveState();
+                    }
+                    
+                    // Mark card as accepted visually
+                    card.style.background = 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)';
+                    card.style.border = '2px solid #28a745';
+                    card.dataset.accepted = 'true';
+                    
+                    // Replace buttons with accepted badge + refine option
+                    const actionsDiv = card.querySelector('.suggestion-actions');
+                    actionsDiv.innerHTML = '';
+                    
+                    const acceptedBadge = document.createElement('div');
+                    acceptedBadge.style.cssText = 'flex: 2; text-align: center; color: #28a745; font-weight: bold; padding: 12px; background: #c3e6cb;';
+                    acceptedBadge.textContent = '✓ ACCEPTED';
+                    
+                    const refineBtn = document.createElement('button');
+                    refineBtn.type = 'button';
+                    refineBtn.textContent = '✏️ Refine';
+                    refineBtn.style.cssText = 'flex: 1; background: #667eea; color: white; border-radius: 0; padding: 12px; cursor: pointer; border: none;';
+                    refineBtn.addEventListener('click', function() {
+                        console.log('Refine button clicked for accepted suggestion:', suggestionId);
+                        showFeedbackForAccepted(suggestionId);
+                    });
+                    
+                    actionsDiv.appendChild(acceptedBadge);
+                    actionsDiv.appendChild(refineBtn);
+                    
+                    showStatus('suggestionsStatus', `✓ Suggestion accepted! Score: ${data.new_score ? data.new_score.toFixed(1) : 'updated'} | ${acceptedSuggestions.length} changes applied`, 'success');
+                } else {
+                    buttons.forEach(btn => btn.disabled = false);
+                    showStatus('suggestionsStatus', `Error: ${data.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                buttons.forEach(btn => btn.disabled = false);
+                showStatus('suggestionsStatus', `Error: ${error.message}`, 'error');
+                console.error('Accept error:', error);
+            }
+        }
+        
+        async function rejectSuggestion(index, suggestionId) {
+            const card = document.querySelector(`.suggestion-card[data-id="${suggestionId}"]`) || document.querySelectorAll('.suggestion-card')[index];
+            const buttons = card.querySelectorAll('button');
+            
+            // Disable buttons
+            buttons.forEach(btn => btn.disabled = true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/suggestions/${suggestionId}/reject`, {
+                    method: 'POST'
+                });
+                
+                let data;
+                const responseText = await response.text();
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error('Invalid response from server');
+                }
+                
+                if (response.ok) {
+                    // Fade out and collapse the card
+                    card.style.opacity = '0.5';
+                    card.style.background = '#f8f9fa';
+                    
+                    // Replace buttons with rejected badge
+                    const actionsDiv = card.querySelector('.suggestion-actions');
+                    actionsDiv.innerHTML = '<div style="text-align: center; color: #6c757d; font-weight: bold; padding: 10px;">✗ REJECTED</div>';
+                    
+                    showStatus('suggestionsStatus', 'Suggestion rejected', 'success');
+                } else {
+                    buttons.forEach(btn => btn.disabled = false);
+                    showStatus('suggestionsStatus', `Error: ${data.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                buttons.forEach(btn => btn.disabled = false);
+                showStatus('suggestionsStatus', `Error: ${error.message}`, 'error');
+                console.error('Reject error:', error);
+            }
+        }
+        
+        async function exportResume(format = 'pdf') {
+            if (!currentResumeData) {
+                showStatus('exportStatus', 'Please upload a resume first', 'error');
+                return;
+            }
+            
+            if (acceptedSuggestions.length === 0) {
+                if (!confirm('No suggestions have been accepted. Export resume without changes?')) {
+                    return;
+                }
+            }
+            
+            try {
+                const formatLabel = format.toUpperCase();
+                showStatus('exportStatus', `📄 Generating ${formatLabel} resume...`, 'info');
+                
+                // Build accepted changes map from acceptedSuggestions
+                const acceptedChanges = {};
+                acceptedSuggestions.forEach(sug => {
+                    if (sug.section_id && sug.suggested_text) {
+                        acceptedChanges[sug.section_id] = sug.suggested_text;
+                    }
+                });
+                
+                const endpoint = format === 'docx' ? `${API_BASE}/export-docx` : `${API_BASE}/export-pdf`;
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accepted_changes: acceptedChanges
+                    })
+                });
+                
+                if (response.ok) {
+                    // Download the file
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    
+                    // Get filename from response headers or use default
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = `Resume_Tailored.${format}`;
+                    if (contentDisposition) {
+                        const match = contentDisposition.match(/filename="?([^"]+)"?/);
+                        if (match) filename = match[1];
+                    }
+                    
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    
+                    showStatus('exportStatus', `✅ ${formatLabel} exported successfully! (${acceptedSuggestions.length} changes applied)`, 'success');
+                } else {
+                    const data = await response.json();
+                    showStatus('exportStatus', `Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showStatus('exportStatus', `Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+
