@@ -171,7 +171,7 @@ Return JSON with this EXACT structure:
     "skills": ["skill1", "skill2", "skill3"]
 }}
 
-=== EXPERIENCE EXTRACTION (CONTENT-BASED) ===
+=== EXPERIENCE EXTRACTION (CONTENT-BASED) - CRITICAL ===
 - Extract ALL work experience entries based on CONTENT, not format
 - Look for: company names, job titles, employment dates, responsibilities
 - Experience can be formatted as bullets, paragraphs, tables, or inline text
@@ -179,6 +179,9 @@ Return JSON with this EXACT structure:
 - If you see a company name + job title + dates, that's an experience entry
 - Bullets array can be empty [] if no bullet points exist
 - Extract responsibilities from any format: bullets, paragraphs, or descriptions
+- IMPORTANT: Even if experiences are mixed with other content, extract them
+- If the resume has ANY work history, you MUST extract at least one experience entry
+- Common patterns: "Company Name | Job Title | Dates", "Job Title at Company", "Company Name - Job Title"
 
 === EDUCATION EXTRACTION (CONTENT-BASED) ===
 - Extract education based on CONTENT: school names, degrees, fields of study
@@ -220,8 +223,19 @@ Return ONLY valid JSON, no markdown or explanations."""
                 result_text = re.sub(r'^```(?:json)?\s*', '', result_text)
                 result_text = re.sub(r'\s*```$', '', result_text)
             
+            # Debug: Print raw response
+            print(f"\n=== RAW LLM RESPONSE (first 1000 chars) ===")
+            print(result_text[:1000])
+            print("="*60)
+            
             try:
                 data = json.loads(result_text)
+                print(f"✓ JSON parsed successfully")
+                print(f"Keys in response: {list(data.keys())}")
+                print(f"Experience key exists: {'experience' in data}")
+                if 'experience' in data:
+                    print(f"Experience type: {type(data['experience'])}")
+                    print(f"Experience value: {data['experience']}")
             except json.JSONDecodeError as json_err:
                 print(f"JSON parsing error: {json_err}")
                 print(f"Response preview: {result_text[:500]}")
@@ -247,15 +261,39 @@ Return ONLY valid JSON, no markdown or explanations."""
             
             # Parse experience
             experience = []
-            for exp in data.get('experience', []):
+            raw_experience = data.get('experience', [])
+            
+            print(f"\n" + "="*60)
+            print(f"=== RAW EXPERIENCE FROM LLM ===")
+            print(f"Number of experience entries: {len(raw_experience)}")
+            for i, exp in enumerate(raw_experience):
+                print(f"  Entry {i+1}: {exp}")
+            print("="*60)
+            
+            for exp in raw_experience:
+                if not isinstance(exp, dict):
+                    print(f"⚠️ Skipping non-dict experience entry: {exp}")
+                    continue
+                    
                 bullets = []
                 for b in exp.get('bullets', []):
                     if isinstance(b, str) and b.strip():
                         bullets.append(BulletPoint(text=b.strip()))
                 
                 # Add experience entry if we have company or title (bullets are optional)
-                company = exp.get('company', '').strip()
-                title = exp.get('title', '').strip()
+                company = str(exp.get('company', '')).strip() if exp.get('company') else ''
+                title = str(exp.get('title', '')).strip() if exp.get('title') else ''
+                
+                # Also check for alternative field names
+                if not company:
+                    company = str(exp.get('employer', '')).strip() if exp.get('employer') else ''
+                if not company:
+                    company = str(exp.get('organization', '')).strip() if exp.get('organization') else ''
+                if not title:
+                    title = str(exp.get('position', '')).strip() if exp.get('position') else ''
+                if not title:
+                    title = str(exp.get('role', '')).strip() if exp.get('role') else ''
+                
                 if company or title:
                     experience.append(ExperienceEntry(
                         company=company or 'Unknown',
@@ -265,6 +303,13 @@ Return ONLY valid JSON, no markdown or explanations."""
                         end_date=exp.get('end_date'),
                         bullets=bullets
                     ))
+                    print(f"✓ Added experience: {title} at {company}")
+                else:
+                    print(f"⚠️ Skipping experience entry - no company or title: {exp}")
+            
+            print(f"\n=== FINAL EXPERIENCE COUNT ===")
+            print(f"Total experience entries extracted: {len(experience)}")
+            print("="*60)
             
             # Parse education
             education = []
@@ -304,6 +349,15 @@ Return ONLY valid JSON, no markdown or explanations."""
             
             print(f"\n=== FINAL RESULT ===")
             print(f"Skills ({len(skills)}): {skills}")
+            print(f"Experience entries: {len(experience)}")
+            print(f"Education entries: {len(education)}")
+            
+            # Validate we extracted something meaningful
+            if len(experience) == 0 and len(education) == 0 and not personal_info.name and not personal_info.email:
+                print("⚠️ WARNING: No meaningful data extracted from resume!")
+                print("This might indicate the LLM didn't understand the resume format.")
+                print("Falling back to regex parsing...")
+                return None  # Return None to trigger fallback
             
             return ResumeData(
                 personal_info=personal_info,
