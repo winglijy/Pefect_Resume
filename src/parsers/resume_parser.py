@@ -155,21 +155,36 @@ Return ONLY valid JSON, no markdown or explanations."""
 
         try:
             response = generate_chat_completion(
-                model="grok-4-fast",
                 messages=[
                     {"role": "system", "content": "You are an expert resume parser. Extract all information accurately and return valid JSON only."},
                     {"role": "user", "content": prompt}
-                ]
+                ],
+                model="grok-4-fast",
+                json_mode=True
             )
             
-            result_text = response.choices[0].message.content.strip()
+            result_text = response.strip()
             
             # Clean JSON
             if result_text.startswith("```"):
                 result_text = re.sub(r'^```(?:json)?\s*', '', result_text)
                 result_text = re.sub(r'\s*```$', '', result_text)
             
-            data = json.loads(result_text)
+            try:
+                data = json.loads(result_text)
+            except json.JSONDecodeError as json_err:
+                print(f"JSON parsing error: {json_err}")
+                print(f"Response preview: {result_text[:500]}")
+                # Try to extract JSON from the response if it's wrapped in text
+                json_match = re.search(r'\{.*\}', result_text, re.DOTALL)
+                if json_match:
+                    try:
+                        data = json.loads(json_match.group(0))
+                        print("  ✓ Extracted JSON from response")
+                    except:
+                        raise json_err
+                else:
+                    raise json_err
             
             # Build ResumeData from parsed JSON
             personal_info = PersonalInfo(
