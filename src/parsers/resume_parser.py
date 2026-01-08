@@ -82,15 +82,30 @@ class ResumeParser:
             print(full_text[:1500])
             print("=" * 40)
             
-            # Try LLM parsing first for best accuracy
+            # Try LLM parsing first for content-based extraction (best accuracy)
             if LLM_AVAILABLE:
                 try:
                     resume_data = self._parse_with_llm(full_text)
                     if resume_data:
-                        print("✓ LLM parsing successful")
-                        return resume_data, {}
+                        # Validate we got meaningful data
+                        if (resume_data.personal_info.name or resume_data.personal_info.email or 
+                            len(resume_data.experience) > 0 or len(resume_data.education) > 0):
+                            print("✓ LLM content-based parsing successful")
+                            return resume_data, {}
+                        else:
+                            print("⚠ LLM parsing returned empty data, retrying...")
+                            # Retry once
+                            resume_data = self._parse_with_llm(full_text)
+                            if resume_data and (resume_data.personal_info.name or resume_data.personal_info.email or 
+                                               len(resume_data.experience) > 0 or len(resume_data.education) > 0):
+                                print("✓ LLM parsing successful on retry")
+                                return resume_data, {}
+                            else:
+                                print("⚠ LLM parsing still returned empty data, falling back to regex")
                 except Exception as e:
                     print(f"LLM parsing failed, falling back to regex: {e}")
+                    import traceback
+                    traceback.print_exc()
             
             # Fallback to regex parsing
             full_text = self._join_wrapped_lines(full_text)
@@ -102,12 +117,23 @@ class ResumeParser:
             raise ValueError(f"Error reading PDF file: {str(e)}")
     
     def _parse_with_llm(self, text: str) -> Optional[ResumeData]:
-        """Use LLM to parse resume text into structured data."""
-        prompt = f"""Extract information from this resume into JSON. 
+        """Use LLM to parse resume text into structured data using semantic understanding."""
+        prompt = f"""Extract information from this resume into JSON using CONTENT-BASED understanding, not format matching.
 
 === CRITICAL RULES ===
 1. DO NOT make up or invent ANY information
 2. Extract EXACTLY what's written in the resume
+3. IGNORE FORMATTING - Focus on understanding the MEANING and CONTENT
+4. Extract based on SEMANTIC CONTENT, not section headers or formatting patterns
+5. If information is present but not in a standard format, extract it anyway
+
+=== CONTENT-BASED EXTRACTION APPROACH ===
+- Look for MEANING, not specific keywords or formats
+- Work experience can be anywhere - look for company names, job titles, dates, responsibilities
+- Education can be anywhere - look for school names, degrees, graduation dates
+- Skills can be listed, in paragraphs, or embedded in descriptions - extract all of them
+- Personal info (name, email, phone) can be anywhere in the document
+- Don't require specific section headers - understand what each piece of text represents
 
 RESUME TEXT:
 {text}
@@ -145,18 +171,42 @@ Return JSON with this EXACT structure:
     "skills": ["skill1", "skill2", "skill3"]
 }}
 
-=== SKILLS EXTRACTION ===
-Put ALL skills, certifications, tools, technologies, and competencies into the "skills" array.
-- Include everything from "Skills", "Technical Skills", "Certifications" sections
+=== EXPERIENCE EXTRACTION (CONTENT-BASED) ===
+- Extract ALL work experience entries based on CONTENT, not format
+- Look for: company names, job titles, employment dates, responsibilities
+- Experience can be formatted as bullets, paragraphs, tables, or inline text
+- Include entries even if they don't have bullet points or standard formatting
+- If you see a company name + job title + dates, that's an experience entry
+- Bullets array can be empty [] if no bullet points exist
+- Extract responsibilities from any format: bullets, paragraphs, or descriptions
+
+=== EDUCATION EXTRACTION (CONTENT-BASED) ===
+- Extract education based on CONTENT: school names, degrees, fields of study
+- Education can be anywhere in the resume, not just under "Education" header
+- Look for: university/college names, degree types (BS, MS, MBA, PhD, etc.), graduation dates
+- Extract even if not in a standard format
+
+=== SKILLS EXTRACTION (CONTENT-BASED) ===
+- Extract ALL skills, technologies, tools, and competencies based on CONTENT
+- Skills can be in: dedicated sections, embedded in descriptions, listed anywhere
+- Include: programming languages, software tools, frameworks, methodologies, certifications
+- Extract from: "Skills" sections, job descriptions, project descriptions, anywhere they appear
 - Split comma-separated items into individual entries
 - Extract each item exactly as written
+
+=== PERSONAL INFO EXTRACTION (CONTENT-BASED) ===
+- Name: Usually at the top, but can be anywhere - look for full names
+- Email: Look for email patterns (text@domain.com) anywhere in the document
+- Phone: Look for phone number patterns anywhere in the document
+- Location: Look for city/state or address information
+- LinkedIn: Look for linkedin.com URLs anywhere
 
 Return ONLY valid JSON, no markdown or explanations."""
 
         try:
             response = generate_chat_completion(
                 messages=[
-                    {"role": "system", "content": "You are an expert resume parser. Extract all information accurately and return valid JSON only."},
+                    {"role": "system", "content": "You are an expert resume parser that extracts information based on CONTENT and MEANING, not format. Understand what each piece of text represents semantically, regardless of how it's formatted. Extract all information accurately and return valid JSON only."},
                     {"role": "user", "content": prompt}
                 ],
                 model="grok-4-fast",
@@ -203,10 +253,13 @@ Return ONLY valid JSON, no markdown or explanations."""
                     if isinstance(b, str) and b.strip():
                         bullets.append(BulletPoint(text=b.strip()))
                 
-                if bullets:  # Only add if there are bullets
+                # Add experience entry if we have company or title (bullets are optional)
+                company = exp.get('company', '').strip()
+                title = exp.get('title', '').strip()
+                if company or title:
                     experience.append(ExperienceEntry(
-                        company=exp.get('company', 'Unknown'),
-                        title=exp.get('title', 'Unknown'),
+                        company=company or 'Unknown',
+                        title=title or 'Unknown',
                         location=exp.get('location'),
                         start_date=exp.get('start_date'),
                         end_date=exp.get('end_date'),
@@ -323,15 +376,30 @@ Return ONLY valid JSON, no markdown or explanations."""
         # Extract all text
         full_text = "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
         
-        # Try LLM parsing first
+        # Try LLM parsing first for content-based extraction (best accuracy)
         if LLM_AVAILABLE:
             try:
                 resume_data = self._parse_with_llm(full_text)
                 if resume_data:
-                    print("✓ LLM parsing successful for DOCX")
-                    return resume_data, {}
+                    # Validate we got meaningful data
+                    if (resume_data.personal_info.name or resume_data.personal_info.email or 
+                        len(resume_data.experience) > 0 or len(resume_data.education) > 0):
+                        print("✓ LLM content-based parsing successful for DOCX")
+                        return resume_data, {}
+                    else:
+                        print("⚠ LLM parsing returned empty data for DOCX, retrying...")
+                        # Retry once
+                        resume_data = self._parse_with_llm(full_text)
+                        if resume_data and (resume_data.personal_info.name or resume_data.personal_info.email or 
+                                           len(resume_data.experience) > 0 or len(resume_data.education) > 0):
+                            print("✓ LLM parsing successful for DOCX on retry")
+                            return resume_data, {}
+                        else:
+                            print("⚠ LLM parsing still returned empty data for DOCX, falling back to regex")
             except Exception as e:
                 print(f"LLM parsing failed for DOCX, falling back to regex: {e}")
+                import traceback
+                traceback.print_exc()
         
         # Fallback to regex parsing
         formatting_map = {}
@@ -571,10 +639,13 @@ Return ONLY valid JSON, no markdown or explanations."""
                     if bullet_text and len(bullet_text) > 5:
                         bullets.append(BulletPoint(text=bullet_text))
             
-            if bullets:
+            # Add experience entry if we have company or title (bullets are optional)
+            company_clean = company.strip() if company else ''
+            title_clean = title.strip() if title else ''
+            if company_clean or title_clean:
                 experience_entries.append(ExperienceEntry(
-                    company=company,
-                    title=title,
+                    company=company_clean or 'Unknown',
+                    title=title_clean or 'Unknown',
                     start_date=start_date,
                     end_date=end_date,
                     bullets=bullets
